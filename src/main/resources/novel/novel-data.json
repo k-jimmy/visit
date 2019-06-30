@@ -1,0 +1,16 @@
+[
+  {
+    "novel_num": 0,
+    "novel_name": "笔趣阁",
+    "novel_url": "https://www.qu.la",
+    "novel_search_url": "https://sou.xanbhx.com/search?siteid=qula&q=",
+    "select_name": "#search-main > div.search-list > ul > li",
+    "select_name_text": "span.s2 > a",
+    "select_name_href": "span.s2 > a",
+    "select_author_text": "#search-main > div.search-list > ul > li:nth-child(2) > span.s4",
+    "select_catalog": "#list > dl > dd",
+    "select_catalog_text": "a",
+    "select_catalog_href": "a",
+    "select_content": "#content"
+  }
+]
