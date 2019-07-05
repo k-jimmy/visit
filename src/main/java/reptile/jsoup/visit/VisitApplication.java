@@ -15,7 +15,7 @@ public class VisitApplication {
         //初始化请求头
         ProxyIP.initUserAgent();
         //初始化IP代理池
-        ProxyIP.reptileIP(1);
+        ProxyIP.timeIPTask();
     }
 
 }
