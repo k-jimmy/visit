@@ -31,7 +31,7 @@ public class ProxyIP {
      * 取前1000页数据
      */
     public static void timeIPTask() {
-        final long timeInterval = 5 * 60 * 1000;
+        final long timeInterval = 60 * 1000;
         Runnable runnable = new Runnable() {
             int i = 1;
             public void run() {
@@ -243,7 +243,7 @@ public class ProxyIP {
     public static void initUserAgent() {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader("C:\\Users\\yanan\\IdeaProjects\\visit\\src\\main\\resources\\userAgent.json"));
+            reader = new BufferedReader(new FileReader("F:\\下载\\gecco-master\\visit\\src\\main\\resources\\userAgent.json"));
             Gson gson = new GsonBuilder().create();
             BaseService.userAgent = gson.fromJson(reader, UserAgent[].class);
         } catch (FileNotFoundException e) {

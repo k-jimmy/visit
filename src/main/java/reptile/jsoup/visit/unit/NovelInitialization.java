@@ -21,7 +21,7 @@ public class NovelInitialization {
     public static void initNovelData() {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new FileReader("C:\\Users\\yanan\\IdeaProjects\\visit\\src\\main\\resources\\novel\\novel-data.json"));
+            reader = new BufferedReader(new FileReader("F:\\下载\\gecco-master\\visit\\src\\main\\resources\\novel\\novel-data.json"));
             Gson gson = new GsonBuilder().create();
             BaseService.novelDatas = gson.fromJson(reader, NovelData[].class);
         } catch (FileNotFoundException e) {
