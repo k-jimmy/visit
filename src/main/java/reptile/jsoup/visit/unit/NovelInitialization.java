@@ -9,9 +9,15 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 
+/**
+ * 配置文件初始化
+ */
 public class NovelInitialization {
 //    public static NovelData[] novelDatas = null;
 
+    /**
+     * 初始化书源
+     */
     public static void initNovelData() {
         BufferedReader reader = null;
         try {

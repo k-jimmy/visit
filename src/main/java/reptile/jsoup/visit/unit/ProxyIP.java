@@ -9,13 +9,16 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import reptile.jsoup.visit.entity.ProxyIPEntity;
 import reptile.jsoup.visit.entity.UserAgent;
-import reptile.jsoup.visit.entity.novel.config.NovelData;
 import reptile.jsoup.visit.service.BaseService;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Iterator;
+
+import org.apache.commons.io.IOUtils;
 
 /**
  * 自动爬取代理IP地址
@@ -28,7 +31,7 @@ public class ProxyIP {
      * 取前1000页数据
      */
     public static void timeIPTask() {
-        final long timeInterval = 60 * 1000;
+        final long timeInterval = 5 * 60 * 1000;
         Runnable runnable = new Runnable() {
             int i = 1;
             public void run() {
@@ -37,7 +40,7 @@ public class ProxyIP {
                     try {
                         Thread.sleep(timeInterval);
                         i++;
-                        if (i == 1001) {
+                        if (i > 1000) {
                             i = 1;
                         }
                     } catch (InterruptedException e) {
@@ -51,26 +54,102 @@ public class ProxyIP {
     }
 
     /**
-     * IP代理池爬取
-     *
-     * @param i
+     * 定时循环代理池,测试IP是否可用
+     * 60分钟循环一次
      */
-    public static void reptileIP(int i) {
+    public static void timeIPRemove() {
+        final long timeInterval = 60 * 60 * 1000;
+        Runnable runnable = new Runnable() {
+            public void run() {
+                while (true) {
+                    removeIPFor();
+                    try {
+                        Thread.sleep(timeInterval);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        Thread thread = new Thread(runnable);
+        thread.start();
+    }
+
+    /**
+     * 定时循环代理池,测试IP是否可用
+     */
+    private static void removeIPFor() {
+        Iterator<ProxyIPEntity> it = BaseService.proxyIPS.iterator();
+        while (it.hasNext()) {
+            if (!testIP(it.next().getIP(), it.next().getPort())) {
+                it.remove();
+            }
+        }
+    }
+
+    /**
+     * 测试IP是否可用
+     *
+     * @param ip ip地址
+     * @param port 端口
+     * @return
+     */
+    private static boolean testIP(String ip, int port) {
+        try {
+            //Proxy类代理方法
+            URL url = new URL("http://www.baidu.com");
+            // 创建代理服务器
+            InetSocketAddress addr = null;
+            addr = new InetSocketAddress(ip, port);
+            Proxy proxy = new Proxy(Proxy.Type.HTTP, addr); // http 代理
+            URLConnection conn = null;
+            conn = url.openConnection(proxy);
+            InputStream in = conn.getInputStream();
+            String s = IOUtils.toString(in);
+            //System.out.println(s);
+            if (!s.contains("百度")) {
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
+    }
+
+    /**
+     * 用户使用IP代理时,删除不可用IP
+     *
+     * @param ip ip地址
+     */
+    public static void removeIP(String ip) {
+        Iterator<ProxyIPEntity> it = BaseService.proxyIPS.iterator();
+        while (it.hasNext()) {
+            if (ip.equals(it.next().getIP())) {
+                it.remove();
+                break;
+            }
+        }
+    }
+
+    /**
+     * IP代理池爬取
+     * speed 访问延迟  score评价   survivalTime剩余时间
+     *
+     * @param i 页码
+     */
+    private static void reptileIP(int i) {
         String url = "http://www.xiladaili.com/gaoni/";
         Connection conn;
         Document doc;
-
         try {
             conn = Jsoup.connect(url + i + "/");
-            conn = setHeader(conn);
-            conn = setProxyIP(conn);
-            doc = conn.timeout(5000).get();
+            doc = setConn(conn).get();
             Elements elements = doc.select("body > div > div.container.mt-4 > div.mt-0.mb-2.table-responsive > table > tbody > tr");
             for (Element ele : elements) {
                 double speed = Double.parseDouble(ele.select("td:nth-child(5)").text());
                 int score = Integer.parseInt(ele.select("td:nth-child(8)").text());
                 String survivalTime = ele.select("td:nth-child(6)").text();
-                if (speed > 3) {
+                if (speed > 2) {
                     continue;
                 }
                 if (score < 10000) {
@@ -100,6 +179,12 @@ public class ProxyIP {
         }
     }
 
+    public static Connection setConn(Connection conn) {
+        conn = setHeader(conn);
+        conn = setProxyIP(conn);
+        conn = conn.timeout(5000);
+        return conn;
+    }
     /**
      * 设置代理IP
      *

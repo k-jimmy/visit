@@ -11,7 +11,8 @@ import java.util.List;
 //@Service
 public class BaseService {
     Gson gson = new Gson();
-    public static NovelData[] novelDatas = null;
+    public static NovelData[]
+            novelDatas = null;
     public static UserAgent[] userAgent = null;
     public static List<ProxyIPEntity> proxyIPS = new ArrayList<>();
 

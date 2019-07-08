@@ -1,5 +1,6 @@
 package reptile.jsoup.visit.service;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -7,6 +8,7 @@ import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import reptile.jsoup.visit.entity.novel.ret.NovelCatalog;
 import reptile.jsoup.visit.entity.novel.ret.NovelName;
+import reptile.jsoup.visit.unit.ProxyIP;
 
 import javax.net.ssl.*;
 import java.io.IOException;
@@ -51,36 +53,58 @@ public class NovelService extends BaseService {
     }
 
     /**
-     * 根据名称搜索小说目录链接
+     * 根据名称和作者搜索小说目录链接
      *
-     * @param
+     * @param novelName   书名
+     * @param novelAuthor 作者
+     * @param dataIndex   当前引用的源
      * @return
      */
     private String getNovelUrl(String novelName, String novelAuthor, int dataIndex) {
         String url = novelDatas[dataIndex].getNovel_search_url() + novelName;
+        Connection conn;
         Document doc;
         try {
-            doc = Jsoup.connect(url).get();
+            conn = Jsoup.connect(url);
+            doc = ProxyIP.setConn(conn).get();
             Elements elements = doc.select(novelDatas[dataIndex].getSelect_name());
+//            if (elements == null) {
+//                sourceChange(novelName, novelAuthor, dataIndex);
+//            }
             for (Element ele : elements) {
                 String novel_name = ele.select(novelDatas[dataIndex].getSelect_name_text()).text();
                 String novel_author = ele.select(novelDatas[dataIndex].getSelect_author_text()).text();
                 if (novelName.equals(novel_name) && novelAuthor.equals(novel_author)) {
                     return ele.select(novelDatas[dataIndex].getSelect_name_href()).attr("href");
                 }
+//                else{
+//                    sourceChange(novelName, novelAuthor, dataIndex);
+//                }
             }
         } catch (IOException e) {
+            //注册ssl
             getByDisableCertValidation(url);
-            getNovelUrl(novelName, novelAuthor, dataIndex);
             e.printStackTrace();
         }
         return null;
     }
 
+//    /**
+//     * 自动换源
+//     * @param novelName 书名
+//     * @param novelAuthor 作者
+//     * @param dataIndex 当前引用源
+//     */
+//    private void sourceChange(String novelName, String novelAuthor, int dataIndex) {
+//        dataIndex = dataIndex + 1;
+//        if (dataIndex < novelDatas.length) {
+//            getNovelUrl(novelName, novelAuthor, dataIndex);
+//        }
+//    }
+
     /**
      * 搜索目录
      * 用户在当前小说界面查看目录,则需要网站下标取对应的目录
-     * 搜索不到对应的资源,则遍历novel-data资源
      *
      * @param novelName   书名
      * @param novelAuthor 作者
@@ -92,6 +116,7 @@ public class NovelService extends BaseService {
         int index = 0;
         List<NovelCatalog> novelCatalogs = new ArrayList<>();
         String url = null;
+        //dataIndex>-1则不是第一次搜索,不需要遍历,否则需要遍历,直到找到源
         if (dataIndex > -1) {
             url = getNovelUrl(novelName, novelAuthor, dataIndex);
         } else {
@@ -103,8 +128,11 @@ public class NovelService extends BaseService {
                 }
             }
         }
+        Connection conn;
+        Document doc;
         try {
-            Document doc = Jsoup.connect(url).get();
+            conn = Jsoup.connect(url);
+            doc = ProxyIP.setConn(conn).get();
             Elements elements = doc.select(novelDatas[dataIndex].getSelect_catalog());
             for (Element ele : elements) {
                 String catalog_url;
@@ -136,8 +164,12 @@ public class NovelService extends BaseService {
      */
     public String novelContent(String url, int dataIndex) {
         String content = null;
+        Connection conn;
+        Document doc;
         try {
-            Document doc = Jsoup.connect(novelDatas[dataIndex].getNovel_url() + url).get();
+            conn = Jsoup.connect(novelDatas[dataIndex].getNovel_url() + url);
+            doc = ProxyIP.setConn(conn).get();
+//            Document doc = Jsoup.connect(novelDatas[dataIndex].getNovel_url() + url).get();
             content = doc.select(novelDatas[dataIndex].getSelect_content()).text();
         } catch (IOException e) {
             e.printStackTrace();
